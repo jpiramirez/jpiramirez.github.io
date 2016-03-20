@@ -22,7 +22,104 @@
 
             <aside id="featured" class="body">
                 <article>
-                    <h1 class="entry-title"><a href="/gazebo-speedup.html">Lowering the computational load from Gazebo</a></h1>
+                    <h1 class="entry-title"><a href="/ros-clockserver.html">Writing a clock server for ROS simulations</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2016-03-20T12:00:00-05:00">
+                Published: Sun 20 March 2016
+        </abbr>
+		<br />
+        <abbr class="modified" title="2015-03-20T12:00:00-05:00">
+                Updated: Fri 20 March 2015
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/juan-pablo-ramirez.html">Juan-Pablo Ramirez</a>
+        </address>
+<p>In <a href="/category/ros.html">ROS</a>.</p>
+<p>tags: <a href="/tag/robotics.html">robotics</a> <a href="/tag/ros.html">ros</a> <a href="/tag/cpp.html">cpp</a> </p>
+</footer><!-- /.post-info --><p>One advantage of using <a href="http://ros.org">ROS</a> is the fact that nodes <a href="http://wiki.ros.org/roscpp/Overview/Time">can be agnostic to the source of their timing signals</a>. The ROS system calls such as <code>ros::Time::now()</code> from roscpp will grab the current time stamp from the OS clock or from a simulated <code>/clock</code> signal, depending on the availability of <code>/clock</code> and on the parameter <code>/use_sim_time</code>. Users can force their nodes to query the OS for the current time by using functions from the <code>ros::WallTime*</code> types.</p>
+<p>A commonly used simulated clock source comes from Gazebo, which will always publish <code>/clock</code>. But sometimes Gazebo can consume resources that are better used somewhere else. Besides, it is interesting to write a node whose sole purpose is to publish messages to <code>/clock</code>.</p>
+<p>The <code>/clock</code> topic is of type <code>rosgraph_msgs/Clock</code>, and it simply consists of a single time stamp. The time data type is just two integers, one for seconds and another for nanoseconds. Implementing a clock server simply consists of using functions from the <code>ros::WallTime*</code> types to read the base time signal, process that signal by multiplying or dividing it by some factor, and publishing the <code>rosgraph_msgs/Clock</code> messages that result. More details about clock messages can be found <a href="http://wiki.ros.org/Clock">here</a>.</p>
+<p>Here is an example of a clock server.</p>
+<div class="highlight"><pre><span class="c1">// Clock server</span>
+<span class="c1">//</span>
+<span class="c1">// Juan Pablo Ramirez &lt;pablo.ramirez@utdallas.edu&gt;</span>
+<span class="c1">// The University of Texas at Dallas</span>
+<span class="c1">// Sensing, Robotics, Vision, Control and Estimation Lab</span>
+<span class="c1">// (SeRViCE) 2012-2016</span>
+
+<span class="cp">#include &lt;ros/ros.h&gt;</span>
+<span class="cp">#include &lt;rosgraph_msgs/Clock.h&gt;</span>
+
+<span class="k">class</span> <span class="nc">clockserver</span>
+<span class="p">{</span>
+<span class="n">ros</span><span class="o">::</span><span class="n">NodeHandle</span> <span class="n">nh_</span><span class="p">;</span>
+<span class="n">ros</span><span class="o">::</span><span class="n">Publisher</span> <span class="n">clockpub</span><span class="p">;</span>
+<span class="n">ros</span><span class="o">::</span><span class="n">Time</span> <span class="n">ctime</span><span class="p">;</span>
+
+<span class="kt">double</span> <span class="n">tfactor</span><span class="p">,</span> <span class="n">realfactor</span><span class="p">;</span>
+
+<span class="n">ros</span><span class="o">::</span><span class="n">WallTimer</span> <span class="n">timer</span><span class="p">;</span>
+
+<span class="nl">public:</span>
+<span class="n">clockserver</span><span class="p">()</span>
+<span class="p">{</span>
+
+    <span class="n">nh_</span><span class="p">.</span><span class="n">param</span><span class="p">(</span><span class="s">&quot;timefactor&quot;</span><span class="p">,</span> <span class="n">tfactor</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">tfactor</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">tfactor</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+    <span class="n">clockpub</span> <span class="o">=</span> <span class="n">nh_</span><span class="p">.</span><span class="n">advertise</span><span class="o">&lt;</span><span class="n">rosgraph_msgs</span><span class="o">::</span><span class="n">Clock</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;/clock&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+    <span class="n">ROS_INFO_STREAM</span><span class="p">(</span><span class="s">&quot;Clock server created&quot;</span><span class="p">);</span>
+
+    <span class="n">nh_</span><span class="p">.</span><span class="n">param</span><span class="p">(</span><span class="s">&quot;tickspersec&quot;</span><span class="p">,</span> <span class="n">realfactor</span><span class="p">,</span> <span class="mf">250.0</span><span class="p">);</span>
+    <span class="n">timer</span> <span class="o">=</span> <span class="n">nh_</span><span class="p">.</span><span class="n">createWallTimer</span><span class="p">(</span><span class="n">ros</span><span class="o">::</span><span class="n">WallDuration</span><span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="n">realfactor</span><span class="p">),</span> <span class="o">&amp;</span><span class="n">clockserver</span><span class="o">::</span><span class="n">broadcastTime</span><span class="p">,</span> <span class="k">this</span><span class="p">);</span>
+
+    <span class="n">ctime</span><span class="p">.</span><span class="n">sec</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">ctime</span><span class="p">.</span><span class="n">nsec</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="o">~</span><span class="n">clockserver</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="n">broadcastTime</span><span class="p">(</span><span class="k">const</span> <span class="n">ros</span><span class="o">::</span><span class="n">WallTimerEvent</span><span class="o">&amp;</span> <span class="n">te</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">ros</span><span class="o">::</span><span class="n">Duration</span> <span class="n">d</span><span class="p">(</span><span class="n">tfactor</span><span class="o">/</span><span class="n">realfactor</span><span class="p">);</span>
+    <span class="n">ctime</span> <span class="o">=</span> <span class="n">ctime</span> <span class="o">+</span> <span class="n">d</span><span class="p">;</span>
+
+    <span class="n">rosgraph_msgs</span><span class="o">::</span><span class="n">Clock</span> <span class="n">clockmsg</span><span class="p">;</span>
+    <span class="n">clockmsg</span><span class="p">.</span><span class="n">clock</span><span class="p">.</span><span class="n">sec</span> <span class="o">=</span> <span class="n">ctime</span><span class="p">.</span><span class="n">sec</span><span class="p">;</span>
+    <span class="n">clockmsg</span><span class="p">.</span><span class="n">clock</span><span class="p">.</span><span class="n">nsec</span> <span class="o">=</span> <span class="n">ctime</span><span class="p">.</span><span class="n">nsec</span><span class="p">;</span>
+
+    <span class="n">clockpub</span><span class="p">.</span><span class="n">publish</span><span class="p">(</span><span class="n">clockmsg</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="p">};</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="n">ros</span><span class="o">::</span><span class="n">init</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span> <span class="s">&quot;clockserver&quot;</span><span class="p">);</span>
+<span class="n">clockserver</span> <span class="n">dr</span><span class="p">;</span>
+<span class="n">ros</span><span class="o">::</span><span class="n">spin</span><span class="p">();</span>
+<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>In the code two parameters are read: <code>timefactor</code> is the speed-up or slow-down of the simulated clock signal with respect to "wall" time, and <code>tickspersec</code> is the frequency with which the simulated clock signal will be publish (relative to wall time). This last parameter is important, because the nodes that use the <code>/clock</code> signal may need specific frequencies depending on the application. This is equivalent to the <code>real_time_update_rate</code> from Gazebo world files.</p>                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/gazebo-speedup.html" rel="bookmark"
+                           title="Permalink to Lowering the computational load from Gazebo">Lowering the computational load from Gazebo</a></h1>
+                </header>
+
+                <div class="entry-content">
 <footer class="post-info">
         <abbr class="published" title="2015-12-17T19:30:00-06:00">
                 Published: Thu 17 December 2015
@@ -37,50 +134,12 @@
         </address>
 <p>In <a href="/category/ros.html">ROS</a>.</p>
 <p>tags: <a href="/tag/robotics.html">robotics</a> <a href="/tag/gazebo.html">gazebo</a> </p>
-</footer><!-- /.post-info --><p>The <a href="http://gazebosim.org/">Gazebo</a> simulator is a great platform for algorithm testing, and it is very easy to use through <a href="http://ros.org">ROS</a>. However, Gazebo is quite precise in its calculations by default, which is sometimes cause for slowdowns. This happens often when attempting to simulate multiple robots at once.</p>
-<p>Here are some tips to reduce the load of the simulator when dealing with these situations.</p>
-<h3>Reduce the sampling rate and change the ODE solver</h3>
-<p>It seems that the default settings for Gazebo try to get the simulation running at 1 KHz, which quite frankly is a very fast sampling rate, considering the complexity of some simulation scenarios. One first step to reduce the load from Gazebo would be to reduce this rate by half or even more. It is also possible to choose a different ODE solver. I do not know the specifics of the "quick" solver, but it does seem faster and less accurate.</p>
-<p>The aforementioned changes can be done by modifying the .world file for our simulation.</p>
-<div class="highlight"><pre><span class="nt">&lt;physics</span> <span class="na">type=</span><span class="s">&#39;ode&#39;</span><span class="nt">&gt;</span>
-<span class="nt">&lt;max_step_size&gt;</span>0.004000<span class="nt">&lt;/max_step_size&gt;</span>
-<span class="nt">&lt;real_time_factor&gt;</span>1.000000<span class="nt">&lt;/real_time_factor&gt;</span>
-<span class="nt">&lt;real_time_update_rate&gt;</span>250.000000<span class="nt">&lt;/real_time_update_rate&gt;</span>
-<span class="nt">&lt;gravity&gt;</span>0.000000 0.000000 -9.800000<span class="nt">&lt;/gravity&gt;</span>
-<span class="nt">&lt;ode&gt;</span>
-    <span class="nt">&lt;solver&gt;</span>
-        <span class="nt">&lt;type&gt;</span>quick<span class="nt">&lt;/type&gt;</span>
-        <span class="nt">&lt;iters&gt;</span>200<span class="nt">&lt;/iters&gt;</span>
-    <span class="nt">&lt;/solver&gt;</span>
-<span class="nt">&lt;/ode&gt;</span>
-<span class="nt">&lt;/physics&gt;</span>
-</pre></div>
-
-
-<p>The real_time_factor tag specifies how fast the simulation should run, with respect to real (wall) time. Keeping it as 1 means that Gazebo will try to run the simulation in "real time", but that is not guaranteed and depends on the system load. </p>
-<p>The tags max_step_size and real_time_update_rate should multiply to real_time_factor. In the code snippet we see that the simulation update rate is now 250 Hz, which should be handled a bit better than 1 KHz. An important caveat: if you are using your own controllers for a robot you will have to adjust your gains to the modified sampling rates.</p>
-<h3>Change the sampling rate from the sensors</h3>
-<p>Some simulated sensors can cause a huge load on the system. Cameras, RGB-D sensors and lidars are examples of this. Sometimes the default configuration files for such sensors will have values that are aimed at providing accuracy or precision. It may be the case that our application can get away with much lower sampling rates, especially if the robot dynamics are "slow". In such cases, we can configure the sensors for slower sampling.</p>
-<p>Here is an example from one of the .xacro files I use.</p>
-<div class="highlight"><pre><span class="nt">&lt;xacro:include</span> <span class="na">filename=</span><span class="s">&quot;$(find hector_sensors_description)/urdf/generic_camera.urdf.xacro&quot;</span> <span class="nt">/&gt;</span>
-<span class="nt">&lt;xacro:generic_camera</span> <span class="na">name=</span><span class="s">&quot;downward_cam&quot;</span> <span class="na">parent=</span><span class="s">&quot;base_link&quot;</span> <span class="na">ros_topic=</span><span class="s">&quot;camera/image&quot;</span> <span class="na">cam_info_topic=</span><span class="s">&quot;camera/camera_info&quot;</span> <span class="na">update_rate=</span><span class="s">&quot;10&quot;</span> <span class="na">res_x=</span><span class="s">&quot;640&quot;</span> <span class="na">res_y=</span><span class="s">&quot;480&quot;</span> <span class="na">image_format=</span><span class="s">&quot;R8G8B8&quot;</span> <span class="na">hfov=</span><span class="s">&quot;49.1343426412&quot;</span><span class="nt">&gt;</span>
-</pre></div>
-
-
-<p>This snippet depends on the ROS package hector_sensors_description. The important attribute here is update_rate, from the xacro:generic_camera tag. The original value was 25 Hz and I lowered it to 10 Hz. Since my simulation is using four of these cameras, changing this parameter smoothed things quite a bit. My application may even let me lower it to 5 Hz, but 10 Hz provides a good balance. </p>
-<h3>Simplify the world as much as possible</h3>
-<p>While simulations that use digital elevation maps and detailed 3D environments are very pleasing to the eye, they may also be unnecessarily slow. If you can get away with simpler meshes and less textures, you could get nice benefits in execution rates.</p>
-<p>If you want to take this notion to the extreme, you can run Gazebo in headless mode and avoid any visualization slowdowns. This can also help if your graphics card is lacking rendering power. Let's look at a snippet from one of my .launch files.</p>
-<div class="highlight"><pre><span class="nt">&lt;include</span> <span class="na">file=</span><span class="s">&quot;$(find gazebo_ros)/launch/empty_world.launch&quot;</span><span class="nt">&gt;</span>
-<span class="nt">&lt;arg</span> <span class="na">name=</span><span class="s">&quot;world_name&quot;</span> <span class="na">default=</span><span class="s">&quot;$(find service_utd)/worlds/service.world&quot;</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;arg</span> <span class="na">name=</span><span class="s">&quot;headless&quot;</span> <span class="na">value=</span><span class="s">&quot;true&quot;</span> <span class="nt">/&gt;</span>
-<span class="nt">&lt;arg</span> <span class="na">name=</span><span class="s">&quot;gui&quot;</span> <span class="na">value=</span><span class="s">&quot;false&quot;</span> <span class="nt">/&gt;</span>
-<span class="nt">&lt;/include&gt;</span>
-</pre></div>
-
-
-<p>The package service_utd contains my world files. The important part here are the arguments headless and gui. Note that while we enable the headless mode, the GUI has to be turned off like this or it will start anyway.</p>                </article>
-            </aside><!-- /#featured -->
+</footer><!-- /.post-info -->                <p>Speeding up Gazebo with ROS</p>
+                <a class="readmore" href="/gazebo-speedup.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+                </ol><!-- /#posts-list -->
+                </section><!-- /#content -->
         <section id="extras" class="body">
         </section><!-- /#extras -->
 
