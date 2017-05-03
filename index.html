@@ -3,7 +3,8 @@
 <head>
         <meta charset="utf-8" />
         <title>JPR's Tech Notes</title>
-        <link rel="stylesheet" href="/theme/css/main.css" />
+        <link rel="stylesheet" href="http://jpiramirez.github.io/theme/css/main.css" />
+        <link href="http://jpiramirez.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="JPR's Tech Notes Atom Feed" />
 
         <!--[if IE]>
             <script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -12,17 +13,17 @@
 
 <body id="index" class="home">
         <header id="banner" class="body">
-                <h1><a href="/">JPR's Tech Notes </a></h1>
+                <h1><a href="http://jpiramirez.github.io/">JPR's Tech Notes </a></h1>
                 <nav><ul>
-                    <li><a href="/pages/about-this-site.html">About this site</a></li>
-                    <li><a href="/category/python.html">Python</a></li>
-                    <li><a href="/category/ros.html">ROS</a></li>
+                    <li><a href="http://jpiramirez.github.io/pages/about-this-site.html">About this site</a></li>
+                    <li><a href="http://jpiramirez.github.io/category/python.html">Python</a></li>
+                    <li><a href="http://jpiramirez.github.io/category/ros.html">ROS</a></li>
                 </ul></nav>
         </header><!-- /#banner -->
 
             <aside id="featured" class="body">
                 <article>
-                    <h1 class="entry-title"><a href="/ros-clockserver.html">Writing a clock server for ROS simulations</a></h1>
+                    <h1 class="entry-title"><a href="http://jpiramirez.github.io/ros-clockserver.html">Writing a clock server for ROS simulations</a></h1>
 <footer class="post-info">
         <abbr class="published" title="2016-03-20T12:00:00-05:00">
                 Published: Sun 20 March 2016
@@ -33,10 +34,10 @@
         </abbr>
 
         <address class="vcard author">
-                By                         <a class="url fn" href="/author/juan-pablo-ramirez.html">Juan-Pablo Ramirez</a>
+                By                         <a class="url fn" href="http://jpiramirez.github.io/author/juan-pablo-ramirez.html">Juan-Pablo Ramirez</a>
         </address>
-<p>In <a href="/category/ros.html">ROS</a>.</p>
-<p>tags: <a href="/tag/robotics.html">robotics</a> <a href="/tag/ros.html">ros</a> <a href="/tag/cpp.html">cpp</a> </p>
+<p>In <a href="http://jpiramirez.github.io/category/ros.html">ROS</a>.</p>
+<p>tags: <a href="http://jpiramirez.github.io/tag/robotics.html">robotics</a> <a href="http://jpiramirez.github.io/tag/ros.html">ros</a> <a href="http://jpiramirez.github.io/tag/cpp.html">cpp</a> </p>
 </footer><!-- /.post-info --><p>One advantage of using <a href="http://ros.org">ROS</a> is the fact that nodes <a href="http://wiki.ros.org/roscpp/Overview/Time">can be agnostic to the source of their timing signals</a>. The ROS system calls such as <code>ros::Time::now()</code> from roscpp will grab the current time stamp from the OS clock or from a simulated <code>/clock</code> signal, depending on the availability of <code>/clock</code> and on the parameter <code>/use_sim_time</code>. Users can force their nodes to query the OS for the current time by using functions from the <code>ros::WallTime*</code> types.</p>
 <p>A commonly used simulated clock source comes from Gazebo, which will always publish <code>/clock</code>. But sometimes Gazebo can consume resources that are better used somewhere else. Besides, it is interesting to write a node whose sole purpose is to publish messages to <code>/clock</code>.</p>
 <p>The <code>/clock</code> topic is of type <code>rosgraph_msgs/Clock</code>, and it simply consists of a single time stamp. The time data type is just two integers, one for seconds and another for nanoseconds. Implementing a clock server simply consists of using functions from the <code>ros::WallTime*</code> types to read the base time signal, process that signal by multiplying or dividing it by some factor, and publishing the <code>rosgraph_msgs/Clock</code> messages that result. More details about clock messages can be found <a href="http://wiki.ros.org/Clock">here</a>.</p>
@@ -48,8 +49,8 @@
 <span class="c1">// Sensing, Robotics, Vision, Control and Estimation Lab</span>
 <span class="c1">// (SeRViCE) 2012-2016</span>
 
-<span class="cp">#include &lt;ros/ros.h&gt;</span>
-<span class="cp">#include &lt;rosgraph_msgs/Clock.h&gt;</span>
+<span class="cp">#include</span> <span class="cpf">&lt;ros/ros.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;rosgraph_msgs/Clock.h&gt;</span><span class="cp"></span>
 
 <span class="k">class</span> <span class="nc">clockserver</span>
 <span class="p">{</span>
@@ -61,7 +62,7 @@
 
 <span class="n">ros</span><span class="o">::</span><span class="n">WallTimer</span> <span class="n">timer</span><span class="p">;</span>
 
-<span class="nl">public:</span>
+<span class="k">public</span><span class="o">:</span>
 <span class="n">clockserver</span><span class="p">()</span>
 <span class="p">{</span>
 
@@ -106,7 +107,7 @@
 </pre></div>
 
 
-<p>In the code two parameters are read: <code>timefactor</code> is the speed-up or slow-down of the simulated clock signal with respect to "wall" time, and <code>tickspersec</code> is the frequency with which the simulated clock signal will be publish (relative to wall time). This last parameter is important, because the nodes that use the <code>/clock</code> signal may need specific frequencies depending on the application. This is equivalent to the <code>real_time_update_rate</code> from Gazebo world files.</p>                </article>
+<p>In the code two parameters are read: <code>timefactor</code> is the speed-up or slow-down of the simulated clock signal with respect to "wall" time, and <code>tickspersec</code> is the frequency with which the simulated clock signal will be published (relative to wall time). This last parameter is important, because the nodes that use the <code>/clock</code> signal may need specific frequencies depending on the application. This is equivalent to the <code>real_time_update_rate</code> from Gazebo world files.</p>                </article>
             </aside><!-- /#featured -->
                 <section id="content" class="body">
                     <h1>Other articles</h1>
@@ -115,7 +116,7 @@
 
             <li><article class="hentry">
                 <header>
-                    <h1><a href="/gazebo-speedup.html" rel="bookmark"
+                    <h1><a href="http://jpiramirez.github.io/gazebo-speedup.html" rel="bookmark"
                            title="Permalink to Lowering the computational load from Gazebo">Lowering the computational load from Gazebo</a></h1>
                 </header>
 
@@ -130,18 +131,18 @@
         </abbr>
 
         <address class="vcard author">
-                By                         <a class="url fn" href="/author/juan-pablo-ramirez.html">Juan-Pablo Ramirez</a>
+                By                         <a class="url fn" href="http://jpiramirez.github.io/author/juan-pablo-ramirez.html">Juan-Pablo Ramirez</a>
         </address>
-<p>In <a href="/category/ros.html">ROS</a>.</p>
-<p>tags: <a href="/tag/robotics.html">robotics</a> <a href="/tag/gazebo.html">gazebo</a> </p>
+<p>In <a href="http://jpiramirez.github.io/category/ros.html">ROS</a>.</p>
+<p>tags: <a href="http://jpiramirez.github.io/tag/robotics.html">robotics</a> <a href="http://jpiramirez.github.io/tag/gazebo.html">gazebo</a> </p>
 </footer><!-- /.post-info -->                <p>Speeding up Gazebo with ROS</p>
-                <a class="readmore" href="/gazebo-speedup.html">read more</a>
+                <a class="readmore" href="http://jpiramirez.github.io/gazebo-speedup.html">read more</a>
                 </div><!-- /.entry-content -->
             </article></li>
 
             <li><article class="hentry">
                 <header>
-                    <h1><a href="/opening-post.html" rel="bookmark"
+                    <h1><a href="http://jpiramirez.github.io/opening-post.html" rel="bookmark"
                            title="Permalink to Opening shop">Opening shop</a></h1>
                 </header>
 
@@ -156,17 +157,24 @@
         </abbr>
 
         <address class="vcard author">
-                By                         <a class="url fn" href="/author/juan-pablo-ramirez.html">Juan-Pablo Ramirez</a>
+                By                         <a class="url fn" href="http://jpiramirez.github.io/author/juan-pablo-ramirez.html">Juan-Pablo Ramirez</a>
         </address>
-<p>In <a href="/category/python.html">Python</a>.</p>
-<p>tags: <a href="/tag/pelican.html">pelican</a> <a href="/tag/publishing.html">publishing</a> </p>
+<p>In <a href="http://jpiramirez.github.io/category/python.html">Python</a>.</p>
+<p>tags: <a href="http://jpiramirez.github.io/tag/pelican.html">pelican</a> <a href="http://jpiramirez.github.io/tag/publishing.html">publishing</a> </p>
 </footer><!-- /.post-info -->                <p>Starting engines</p>
-                <a class="readmore" href="/opening-post.html">read more</a>
+                <a class="readmore" href="http://jpiramirez.github.io/opening-post.html">read more</a>
                 </div><!-- /.entry-content -->
             </article></li>
                 </ol><!-- /#posts-list -->
                 </section><!-- /#content -->
         <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="http://jpiramirez.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                        </ul>
+                </div><!-- /.social -->
         </section><!-- /#extras -->
 
         <footer id="contentinfo" class="body">

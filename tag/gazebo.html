@@ -3,7 +3,8 @@
 <head>
         <meta charset="utf-8" />
         <title>JPR's Tech Notes - gazebo</title>
-        <link rel="stylesheet" href="/theme/css/main.css" />
+        <link rel="stylesheet" href="http://jpiramirez.github.io/theme/css/main.css" />
+        <link href="http://jpiramirez.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="JPR's Tech Notes Atom Feed" />
 
         <!--[if IE]>
             <script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -12,17 +13,17 @@
 
 <body id="index" class="home">
         <header id="banner" class="body">
-                <h1><a href="/">JPR's Tech Notes </a></h1>
+                <h1><a href="http://jpiramirez.github.io/">JPR's Tech Notes </a></h1>
                 <nav><ul>
-                    <li><a href="/pages/about-this-site.html">About this site</a></li>
-                    <li><a href="/category/python.html">Python</a></li>
-                    <li><a href="/category/ros.html">ROS</a></li>
+                    <li><a href="http://jpiramirez.github.io/pages/about-this-site.html">About this site</a></li>
+                    <li><a href="http://jpiramirez.github.io/category/python.html">Python</a></li>
+                    <li><a href="http://jpiramirez.github.io/category/ros.html">ROS</a></li>
                 </ul></nav>
         </header><!-- /#banner -->
 
             <aside id="featured" class="body">
                 <article>
-                    <h1 class="entry-title"><a href="/gazebo-speedup.html">Lowering the computational load from Gazebo</a></h1>
+                    <h1 class="entry-title"><a href="http://jpiramirez.github.io/gazebo-speedup.html">Lowering the computational load from Gazebo</a></h1>
 <footer class="post-info">
         <abbr class="published" title="2015-12-17T19:30:00-06:00">
                 Published: Thu 17 December 2015
@@ -33,10 +34,10 @@
         </abbr>
 
         <address class="vcard author">
-                By                         <a class="url fn" href="/author/juan-pablo-ramirez.html">Juan-Pablo Ramirez</a>
+                By                         <a class="url fn" href="http://jpiramirez.github.io/author/juan-pablo-ramirez.html">Juan-Pablo Ramirez</a>
         </address>
-<p>In <a href="/category/ros.html">ROS</a>.</p>
-<p>tags: <a href="/tag/robotics.html">robotics</a> <a href="/tag/gazebo.html">gazebo</a> </p>
+<p>In <a href="http://jpiramirez.github.io/category/ros.html">ROS</a>.</p>
+<p>tags: <a href="http://jpiramirez.github.io/tag/robotics.html">robotics</a> <a href="http://jpiramirez.github.io/tag/gazebo.html">gazebo</a> </p>
 </footer><!-- /.post-info --><p>The <a href="http://gazebosim.org/">Gazebo</a> simulator is a great platform for algorithm testing, and it is very easy to use through <a href="http://ros.org">ROS</a>. However, Gazebo is quite precise in its calculations by default, which is sometimes cause for slowdowns. This happens often when attempting to simulate multiple robots at once.</p>
 <p>Here are some tips to reduce the load of the simulator when dealing with these situations.</p>
 <h3>Reduce the sampling rate and change the ODE solver</h3>
@@ -82,6 +83,13 @@
 <p>The package service_utd contains my world files. The important part here are the arguments headless and gui. Note that while we enable the headless mode, the GUI has to be turned off like this or it will start anyway.</p>                </article>
             </aside><!-- /#featured -->
         <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="http://jpiramirez.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                        </ul>
+                </div><!-- /.social -->
         </section><!-- /#extras -->
 
         <footer id="contentinfo" class="body">
